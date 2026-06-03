@@ -1,0 +1,12 @@
+{
+  "name": "learning-planner",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "frontend"
+  ],
+  "scripts": {
+    "dev:frontend": "npm run dev --workspace=frontend",
+    "dev:backend": "cd backend && uvicorn main:app --reload --port 8000"
+  }
+}
