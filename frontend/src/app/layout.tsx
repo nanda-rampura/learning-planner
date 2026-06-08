@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import "./globals.css";
 import Link from "next/link";
+import { ActivitiesProvider } from "./context/ActivitiesContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -45,8 +46,11 @@ export default function RootLayout({
         </nav>
 
         {/* Page content renders here */}
+        {/* ActivitiesProvider wraps all pages — any page can now access shared activities state */}
         <main className="flex-1 p-8">
-          {children}
+          <ActivitiesProvider>
+            {children}
+          </ActivitiesProvider>
         </main>
 
       </body>
