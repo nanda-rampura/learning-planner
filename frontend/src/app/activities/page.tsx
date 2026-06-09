@@ -6,28 +6,34 @@ import { Category, CATEGORY_EMOJIS } from "../types";
 import ActivityCard from "../components/ActivityCard";
 
 export default function ActivitiesPage() {
-  // Pull shared state from context
-  const { activities, addActivity, toggleComplete } = useActivities();
+  const { activities, loading, error, addActivity, removeActivity, toggleComplete } = useActivities();
 
-  // Local form state — only this page needs these
   const [title, setTitle] = useState<string>("");
   const [category, setCategory] = useState<Category>("Numbers");
   const [duration, setDuration] = useState<number>(15);
+  const [saving, setSaving] = useState(false);
 
-  function handleAddActivity(): void {
+  async function handleAddActivity(): Promise<void> {
     if (!title.trim()) return;
+    setSaving(true);
+    try {
+      await addActivity({ title: title.trim(), category, emoji: CATEGORY_EMOJIS[category], durationMinutes: duration });
+      setTitle("");
+      setDuration(15);
+    } finally {
+      setSaving(false);
+    }
+  }
 
-    addActivity({
-      id: Date.now().toString(),
-      title: title.trim(),
-      category,
-      emoji: CATEGORY_EMOJIS[category],
-      durationMinutes: duration,
-      completed: false,
-    });
+  if (loading) return <p className="text-gray-500">Loading activities...</p>;
 
-    setTitle("");
-    setDuration(15);
+  if (error) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700">
+        <strong>Could not load activities.</strong> Is the backend running on port 8000?
+        <p className="text-sm mt-1">{error}</p>
+      </div>
+    );
   }
 
   return (
@@ -43,6 +49,7 @@ export default function ActivitiesPage() {
             placeholder="Activity title..."
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleAddActivity()}
             className="border rounded-lg px-4 py-2 flex-1 min-w-48"
           />
           <select
@@ -64,23 +71,29 @@ export default function ActivitiesPage() {
           />
           <button
             onClick={handleAddActivity}
-            className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 font-medium"
+            disabled={saving || !title.trim()}
+            className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 font-medium disabled:opacity-50"
           >
-            Add Activity
+            {saving ? "Saving..." : "Add Activity"}
           </button>
         </div>
       </div>
 
       {/* Activity Grid */}
-      <div className="grid grid-cols-3 gap-4">
-        {activities.map((activity) => (
-          <ActivityCard
-            key={activity.id}
-            {...activity}
-            onToggle={toggleComplete}
-          />
-        ))}
-      </div>
+      {activities.length === 0 ? (
+        <p className="text-gray-400">No activities yet — add one above.</p>
+      ) : (
+        <div className="grid grid-cols-3 gap-4">
+          {activities.map((activity) => (
+            <ActivityCard
+              key={activity.id}
+              {...activity}
+              onToggle={toggleComplete}
+              onDelete={removeActivity}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

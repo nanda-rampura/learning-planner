@@ -1,9 +1,7 @@
-"use client"; // needs "use client" because it handles onClick (user interaction)
+"use client";
 
 import CategoryBadge from "./CategoryBadge";
 
-// Props interface — defines what data this component expects
-// Like a C# method signature — caller must pass these in
 interface ActivityCardProps {
   id: string;
   title: string;
@@ -11,10 +9,10 @@ interface ActivityCardProps {
   emoji: string;
   durationMinutes: number;
   completed: boolean;
-  onToggle: (id: string) => void; // function prop — parent passes the handler
+  onToggle: (id: string) => void;
+  onDelete?: (id: string) => void; // optional — only the Activities page passes this
 }
 
-// Color map — each category gets its own background color
 function getCategoryColor(category: ActivityCardProps["category"]): string {
   const colors: Record<ActivityCardProps["category"], string> = {
     Numbers: "bg-blue-200",
@@ -26,8 +24,6 @@ function getCategoryColor(category: ActivityCardProps["category"]): string {
   return colors[category];
 }
 
-// ActivityCard component — takes props, renders a single activity card
-// This is now reusable — any page can render this card by passing props
 export default function ActivityCard({
   id,
   title,
@@ -36,18 +32,32 @@ export default function ActivityCard({
   durationMinutes,
   completed,
   onToggle,
+  onDelete,
 }: ActivityCardProps) {
   return (
     <div
       onClick={() => onToggle(id)}
-      className={`p-4 rounded-xl cursor-pointer transition-opacity ${getCategoryColor(category)} ${
+      className={`relative p-4 rounded-xl cursor-pointer transition-opacity ${getCategoryColor(category)} ${
         completed ? "opacity-60" : "opacity-100"
       }`}
     >
+      {/* Delete button — only rendered when onDelete is provided */}
+      {onDelete && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation(); // prevent toggling when clicking delete
+            onDelete(id);
+          }}
+          className="absolute top-2 right-2 text-gray-400 hover:text-red-500 text-lg leading-none"
+          aria-label="Delete activity"
+        >
+          ×
+        </button>
+      )}
+
       <span className="text-4xl">{emoji}</span>
       <h2 className="text-xl font-semibold mt-2">{title}</h2>
       <div className="mt-2 flex items-center gap-2">
-        {/* Using CategoryBadge — a Server Component inside a Client Component */}
         <CategoryBadge category={category} />
         <span className="text-sm text-gray-500">{durationMinutes} min</span>
       </div>
