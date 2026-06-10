@@ -1,28 +1,27 @@
 "use client";
 
 import CategoryBadge from "./CategoryBadge";
+import { Category } from "../types";
 
 interface ActivityCardProps {
   id: string;
   title: string;
-  category: "Numbers" | "Colors" | "Shapes" | "Letters" | "Stories";
+  category: Category;
   emoji: string;
   durationMinutes: number;
   completed: boolean;
   onToggle: (id: string) => void;
-  onDelete?: (id: string) => void; // optional — only the Activities page passes this
+  onDelete?: (id: string) => void;
 }
 
-function getCategoryColor(category: ActivityCardProps["category"]): string {
-  const colors: Record<ActivityCardProps["category"], string> = {
-    Numbers: "bg-blue-200",
-    Colors: "bg-pink-200",
-    Shapes: "bg-yellow-200",
-    Letters: "bg-green-200",
-    Stories: "bg-purple-200",
-  };
-  return colors[category];
-}
+// Stronger background colors — easier to distinguish for a 4-year-old
+const categoryColors: Record<Category, string> = {
+  Numbers: "bg-blue-300",
+  Colors:  "bg-pink-300",
+  Shapes:  "bg-yellow-300",
+  Letters: "bg-green-300",
+  Stories: "bg-purple-300",
+};
 
 export default function ActivityCard({
   id,
@@ -37,31 +36,40 @@ export default function ActivityCard({
   return (
     <div
       onClick={() => onToggle(id)}
-      className={`relative p-4 rounded-xl cursor-pointer transition-opacity ${getCategoryColor(category)} ${
-        completed ? "opacity-60" : "opacity-100"
-      }`}
+      // active:scale-95 gives a satisfying "press" feel when tapped on a tablet
+      className={`relative p-6 rounded-2xl cursor-pointer select-none
+        transition-all duration-150 active:scale-95 shadow-md
+        ${categoryColors[category]}
+        ${completed ? "opacity-50" : "opacity-100 hover:brightness-105"}`}
     >
-      {/* Delete button — only rendered when onDelete is provided */}
+      {/* Delete button */}
       {onDelete && (
         <button
-          onClick={(e) => {
-            e.stopPropagation(); // prevent toggling when clicking delete
-            onDelete(id);
-          }}
-          className="absolute top-2 right-2 text-gray-400 hover:text-red-500 text-lg leading-none"
+          onClick={(e) => { e.stopPropagation(); onDelete(id); }}
+          className="absolute top-3 right-3 w-7 h-7 flex items-center justify-center
+            rounded-full bg-white/50 text-gray-500 hover:bg-red-100 hover:text-red-500
+            text-lg font-bold leading-none"
           aria-label="Delete activity"
         >
           ×
         </button>
       )}
 
-      <span className="text-4xl">{emoji}</span>
-      <h2 className="text-xl font-semibold mt-2">{title}</h2>
-      <div className="mt-2 flex items-center gap-2">
+      {/* Big emoji — the main visual cue for a pre-reader */}
+      <div className="text-6xl mb-3">{emoji}</div>
+
+      {/* Large title — easy to read */}
+      <h2 className="text-xl font-bold text-gray-800 leading-tight mb-3">{title}</h2>
+
+      <div className="flex items-center gap-2 flex-wrap">
         <CategoryBadge category={category} />
-        <span className="text-sm text-gray-500">{durationMinutes} min</span>
+        <span className="text-sm font-medium text-gray-600">{durationMinutes} min</span>
       </div>
-      <p className="mt-2">{completed ? "✅ Done" : "⬜ Not started"}</p>
+
+      {/* Clear done/not-done indicator at the bottom */}
+      <div className={`mt-4 text-sm font-semibold ${completed ? "text-green-700" : "text-gray-500"}`}>
+        {completed ? "✅ Done!" : "⬜ Tap to complete"}
+      </div>
     </div>
   );
 }

@@ -12,6 +12,7 @@ interface ActivitiesContextType {
   addActivity: (activity: Omit<Activity, "id" | "completed">) => Promise<void>;
   removeActivity: (id: string) => Promise<void>;
   toggleComplete: (id: string) => void;
+  resetAll: () => void; // clears all completed state — weekly reset
 }
 
 const ActivitiesContext = createContext<ActivitiesContextType | null>(null);
@@ -42,15 +43,19 @@ export function ActivitiesProvider({ children }: { children: ReactNode }) {
     setActivities((prev) => prev.filter((a) => a.id !== id));
   }
 
-  // Completed stays as local UI state for now — WeeklyPlan will own persistence (Day 4)
   function toggleComplete(id: string): void {
     setActivities((prev) =>
       prev.map((a) => (a.id === id ? { ...a, completed: !a.completed } : a))
     );
   }
 
+  // Reset all completed state — like starting a fresh week
+  function resetAll(): void {
+    setActivities((prev) => prev.map((a) => ({ ...a, completed: false })));
+  }
+
   return (
-    <ActivitiesContext.Provider value={{ activities, loading, error, addActivity, removeActivity, toggleComplete }}>
+    <ActivitiesContext.Provider value={{ activities, loading, error, addActivity, removeActivity, toggleComplete, resetAll }}>
       {children}
     </ActivitiesContext.Provider>
   );
